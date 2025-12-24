@@ -1,0 +1,141 @@
+-- ===== Config =====
+_G.targetPickaxes = _G.targetPickaxes or {
+    "Arcane Pickaxe",
+    "Magma Pickaxe",
+    "Demonic Pickaxe"
+}
+
+-- เงื่อนไขการเสร็จ: ต้องมี Demonic Pickaxe + เงิน 500000
+_G.completionPickaxe = _G.completionPickaxe or "Demonic Pickaxe"
+_G.completionGold = _G.completionGold or 500000
+
+-- ===== Wait Game + Horst =====
+repeat task.wait(5) until game:IsLoaded()
+repeat task.wait(.1) until _G.Horst_SetDescription and _G.Horst_AccountChangeDone
+
+-- ===== Services =====
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local plr = Players.LocalPlayer
+
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Equipments = require(ReplicatedStorage.Shared.Data.Equipments)
+
+local Knit = require(Shared.Packages.Knit)
+local PlayerController = Knit.GetController("PlayerController")
+local Replica = PlayerController.Replica
+
+-- ===== Wait for Data =====
+print("⏳ Waiting for Replica.Data...")
+repeat task.wait(0.5) until Replica.Data and Replica.Data.Inventory and Replica.Data.Inventory.Equipments
+print("✅ Replica.Data loaded!")
+
+-- ===== Helper Functions =====
+local function hasPickaxe(pickaxeName, inventory)
+    if not inventory then return false end
+    for _, item in pairs(inventory) do
+        if typeof(item) == "table" and item.Name == pickaxeName then
+            return true
+        end
+    end
+    return false
+end
+
+-- ===== Main Loop =====
+print("⛏️ Starting Pickaxe & Gold Check...")
+print("🎯 Target: " .. _G.completionPickaxe .. " + " .. _G.completionGold .. " Gold")
+
+while true do
+    task.wait(10)
+    
+    if not Replica.Data or not Replica.Data.Inventory then
+        warn("⚠️ Data not ready")
+        continue
+    end
+    
+    local Gold = Replica.Data.Gold or 0
+    local Race = Replica.Data.Race or "None"
+    local inventory = Replica.Data.Inventory.Equipments
+    
+    local pickaxeStatus = {}
+    local hasDemonic = false
+    
+    -- Check each target pickaxe
+    for _, targetName in ipairs(_G.targetPickaxes) do
+        local found = hasPickaxe(targetName, inventory)
+        
+        if found then
+            table.insert(pickaxeStatus, "✅ " .. targetName)
+            if targetName == _G.completionPickaxe then
+                hasDemonic = true
+            end
+        else
+            table.insert(pickaxeStatus, "❌ " .. targetName)
+        end
+    end
+    
+    -- Build message
+    local statusText = table.concat(pickaxeStatus, ", ")
+    local message = string.format(
+        "🧬 Race: %s , %s , 💰 Gold: %d",
+        Race,
+        statusText,
+        Gold
+    )
+    
+    -- Build JSON
+    local jsonData = {
+        Name = plr.Name,
+        Race = Race,
+        Gold = Gold,
+        ArcanePickaxe = hasPickaxe("Arcane Pickaxe", inventory),
+        MagmaPickaxe = hasPickaxe("Magma Pickaxe", inventory),
+        DemonicPickaxe = hasPickaxe("Demonic Pickaxe", inventory)
+    }
+    
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    print("📊 Status:")
+    print("  🧬 Race:", Race)
+    print("  💰 Gold:", Gold, "/", _G.completionGold)
+    for _, status in ipairs(pickaxeStatus) do
+        print("  " .. status)
+    end
+    
+    -- Send to Horst
+    pcall(function()
+        _G.Horst_SetDescription(message, HttpService:JSONEncode(jsonData))
+    end)
+    print("📤 Description sent!")
+    
+    -- Check if done: ต้องมี Demonic Pickaxe + เงินครบ
+    if hasDemonic and Gold >= _G.completionGold then
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print("🎯 เป้าหมายสำเร็จ!")
+        print("  ✅ มี " .. _G.completionPickaxe)
+        print("  ✅ เงิน " .. Gold .. " / " .. _G.completionGold)
+        print("⏳ รอ 5 วินาที ก่อนส่ง DONE...")
+        task.wait(5)
+        
+        local ok, err = _G.Horst_AccountChangeDone()
+        if ok then
+            print("✅ ส่งสถานะ DONE สำเร็จ!")
+            print("🎉 บัญชีนี้เสร็จสมบูรณ์แล้ว")
+        else
+            warn("❌ ส่งสถานะ DONE ไม่สำเร็จ:", err)
+        end
+        break
+    else
+        -- แสดงว่าขาดอะไร
+        if not hasDemonic then
+            print("  ⏳ ยังไม่มี " .. _G.completionPickaxe)
+        end
+        if Gold < _G.completionGold then
+            print("  ⏳ ยังขาดเงิน " .. (_G.completionGold - Gold))
+        end
+    end
+    
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+end
+
+print("🏁 Script finished!")
