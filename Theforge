@@ -8,10 +8,10 @@ _G.targetPickaxes = _G.targetPickaxes or {
 -- เงื่อนไขการเสร็จ: ต้องมี Demonic Pickaxe + เงิน 500000
 _G.completionPickaxe = _G.completionPickaxe or "Demonic Pickaxe"
 _G.completionGold = _G.completionGold or 500000
-_G.maxLevel = _G.maxLevel or 120 -- Level สูงสุด ถึงแล้วให้เปลี่ยนไอดี
+_G.maxLevel = _G.maxLevel or 120
 
 -- ===== Wait Game + Horst =====
-repeat task.wait(6) until game:IsLoaded()
+repeat task.wait(5) until game:IsLoaded()
 repeat task.wait(.1) until _G.Horst_SetDescription and _G.Horst_AccountChangeDone
 
 -- ===== Services =====
@@ -43,47 +43,26 @@ local function hasPickaxe(pickaxeName, inventory)
     return false
 end
 
--- แปลง Race เป็น Emoji
 local function getRaceEmoji(race)
     local raceEmojis = {
-        ["Demon"] = "👿",
-        ["Angel"] = "👼🏻",
-        ["Archangel"] = "👼🏻👿",
-        ["Shadow"] = "🌑",
-        ["Developer"] = "💻",
-        ["Golem"] = "🗿",
-        ["Orc"] = "🟢",
-        ["Minotaur"] = "🐂",
-        ["Dragonborn"] = "🐉",
-        ["Dwarf"] = "⛏️",
-        ["Zombie"] = "🧟",
-        ["Orc Lord"] = "👑🟢",
-        ["Undead"] = "💀",
-        ["Human"] = "👤",
-        ["Elf"] = "🧝",
-        ["Goblin"] = "👺"
+        ["Demon"] = "👿", ["Angel"] = "👼🏻", ["Archangel"] = "👼🏻👿",
+        ["Shadow"] = "🌑", ["Developer"] = "💻", ["Golem"] = "🗿",
+        ["Orc"] = "🟢", ["Minotaur"] = "🐂", ["Dragonborn"] = "🐉",
+        ["Dwarf"] = "⛏️", ["Zombie"] = "🧟", ["Orc Lord"] = "👑🟢",
+        ["Undead"] = "💀", ["Human"] = "👤", ["Elf"] = "🧝", ["Goblin"] = "👺"
     }
     return raceEmojis[race] or "❓"
 end
 
--- แปลง Pickaxe เป็นตัวย่อ
 local function getPickaxeShort(pickaxeName)
     local shortcuts = {
-        ["Arcane Pickaxe"] = "AC",
-        ["Magma Pickaxe"] = "MM",
-        ["Demonic Pickaxe"] = "DM",
-        ["Diamond Pickaxe"] = "DIA",
-        ["Stone Pickaxe"] = "ST",
-        ["Iron Pickaxe"] = "IR",
-        ["Gold Pickaxe"] = "GD"
+        ["Arcane Pickaxe"] = "AC", ["Magma Pickaxe"] = "MM", ["Demonic Pickaxe"] = "DM"
     }
     return shortcuts[pickaxeName] or pickaxeName:sub(1, 3):upper()
 end
 
--- แปลงตัวเลขเป็น K, M
 local function formatNumber(num)
-    num = math.floor(num) -- ตัดทศนิยมออก
-    
+    num = math.floor(num)
     if num >= 1000000 then
         return string.format("%.1fM", num / 1000000):gsub("%.0M", "M")
     elseif num >= 1000 then
@@ -94,7 +73,7 @@ local function formatNumber(num)
 end
 
 -- ===== Main Loop =====
-print("⛏️ Starting Pickaxe & Gold Check...")
+print("⛏️ Starting...")
 print("🎯 Target: " .. _G.completionPickaxe .. " + " .. _G.completionGold .. " Gold")
 print("📊 Max Level: " .. _G.maxLevel)
 
@@ -102,153 +81,73 @@ while true do
     task.wait(10)
     
     pcall(function()
-        if not Replica.Data or not Replica.Data.Inventory then
-            warn("⚠️ Data not ready")
-            return
-        end
+        if not Replica.Data or not Replica.Data.Inventory then return end
         
         local Gold = Replica.Data.Gold or 0
         local Race = Replica.Data.Race or "None"
         local Level = Replica.Data.Level or 0
         local inventory = Replica.Data.Inventory.Equipments
         
-        -- เช็ค Level ถ้าถึง maxLevel ให้เปลี่ยนไอดี
+        -- เช็ค Level MAX
         if Level >= _G.maxLevel then
-            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            print("📊 Level ถึง " .. _G.maxLevel .. " แล้ว!")
-            print("🔄 เปลี่ยนไอดี...")
-            
-            local message = string.format(
-                "%s%s , 📊Lv.%d , 💰%s , Level MAX",
-                getRaceEmoji(Race),
-                Race,
-                Level,
-                formatNumber(Gold)
-            )
-            
-            pcall(function()
-                _G.Horst_SetDescription(message)
-            end)
-            
+            print("📊 Level MAX: " .. Level)
+            local msg = getRaceEmoji(Race) .. Race .. " , 📊Lv." .. Level .. " , 💰" .. formatNumber(Gold) .. " , Level MAX"
+            pcall(function() _G.Horst_SetDescription(msg) end)
             task.wait(3)
-            
-            local ok, err = pcall(_G.Horst_AccountChangeDone)
-            if ok then
-                print("✅ ส่งสถานะ DONE สำเร็จ! (Level MAX)")
-                print("🎉 เปลี่ยนไอดี...")
-            else
-                warn("❌ ส่งสถานะ DONE ไม่สำเร็จ:", err)
-            end
-            
+            pcall(_G.Horst_AccountChangeDone)
             return true
         end
         
+        hasDemonic = false
         local pickaxeStatus = {}
-        local hasDemonic = false
         
-        -- Check each target pickaxe
         for _, targetName in ipairs(_G.targetPickaxes) do
             local found = hasPickaxe(targetName, inventory)
             local shortName = getPickaxeShort(targetName)
-            
-            if found then
-                table.insert(pickaxeStatus, "✅" .. shortName)
-                if targetName == _G.completionPickaxe then
-                    hasDemonic = true
-                end
-            else
-                table.insert(pickaxeStatus, "❌" .. shortName)
+            table.insert(pickaxeStatus, (found and "✅" or "❌") .. shortName)
+            if found and targetName == _G.completionPickaxe then
+                hasDemonic = true
             end
         end
-        
-        -- Build message: Race, Level, Money, Pickaxe
-        local raceEmoji = getRaceEmoji(Race)
-        local pickaxeText = table.concat(pickaxeStatus, " ")
-        local goldFormatted = formatNumber(Gold)
         
         local message = string.format(
             "%s%s , 📊Lv.%d , 💰%s , %s",
-            raceEmoji,
+            getRaceEmoji(Race),
             Race,
             Level,
-            goldFormatted,
-            pickaxeText
+            formatNumber(Gold),
+            table.concat(pickaxeStatus, " ")
         )
         
-        -- Build JSON (เรียงตาม: RACE, Level, Gold, Pickaxe)
-        local json_strings = {
-            RACE = Race,
-            Level = Level,
-            Gold = formatNumber(Gold),
-            GoldRaw = math.floor(Gold),
-            ArcanePickaxe = hasPickaxe("Arcane Pickaxe", inventory) and "✅" or "❌",
-            MagmaPickaxe = hasPickaxe("Magma Pickaxe", inventory) and "✅" or "❌",
-            DemonicPickaxe = hasPickaxe("Demonic Pickaxe", inventory) and "✅" or "❌"
-        }
+        -- สร้าง JSON สำหรับ Google Sheets
+        local jsonData = string.format(
+            '{"RACE":"%s","Level":%d,"Gold":"%s","GoldRaw":%d,"ArcanePickaxe":"%s","MagmaPickaxe":"%s","DemonicPickaxe":"%s"}',
+            Race,
+            Level,
+            formatNumber(Gold),
+            hasPickaxe("Arcane Pickaxe", inventory) and "✅" or "❌",
+            hasPickaxe("Magma Pickaxe", inventory) and "✅" or "❌",
+            hasPickaxe("Demonic Pickaxe", inventory) and "✅" or "❌"
+        )
         
-        local EncodeJson = HttpService:JSONEncode(json_strings)
+        print("📤", message)
         
-        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        print("📊 Status:")
-        print("  " .. raceEmoji .. Race)
-        print("  📊 Level:", Level, "/", _G.maxLevel)
-        print("  💰 Gold:", goldFormatted, "(" .. math.floor(Gold) .. ")")
-        for _, status in ipairs(pickaxeStatus) do
-            print("  " .. status)
-        end
-        
-        -- Send to Horst
-        local sendOk, sendErr = pcall(function()
-            _G.Horst_SetDescription(message, EncodeJson)
+        -- ส่งไปยัง Horst
+        pcall(function()
+            _G.Horst_SetDescription(message, jsonData)
         end)
         
-        if sendOk then
-            print("✅ Description sent!")
-        else
-            warn("⚠️ Failed with JSON, trying without JSON...")
-            pcall(function()
-                _G.Horst_SetDescription(message)
-            end)
-        end
-        
-        -- Check if done (Demonic + Gold)
+        -- เช็คเงื่อนไขเสร็จ
         if hasDemonic and Gold >= _G.completionGold then
-            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             print("🎯 เป้าหมายสำเร็จ!")
-            print("  ✅ มี " .. _G.completionPickaxe)
-            print("  ✅ เงิน " .. math.floor(Gold) .. " / " .. _G.completionGold)
-            print("⏳ รอ 5 วินาที ก่อนส่ง DONE...")
             task.wait(5)
-            
-            local ok, err = pcall(_G.Horst_AccountChangeDone)
-            if ok then
-                print("✅ ส่งสถานะ DONE สำเร็จ!")
-                print("🎉 บัญชีนี้เสร็จสมบูรณ์แล้ว")
-            else
-                warn("❌ ส่งสถานะ DONE ไม่สำเร็จ:", err)
-            end
-            
+            pcall(_G.Horst_AccountChangeDone)
             return true
-        else
-            if not hasDemonic then
-                print("  ⏳ ยังไม่มี " .. _G.completionPickaxe)
-            end
-            if Gold < _G.completionGold then
-                print("  ⏳ ยังขาดเงิน " .. formatNumber(_G.completionGold - Gold))
-            end
         end
-        
-        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     end)
     
-    -- ตรวจสอบ Level อีกครั้งก่อน loop ต่อ
-    if Replica.Data and Replica.Data.Level >= _G.maxLevel then
-        break
-    end
-    
-    if hasDemonic and (Replica.Data.Gold or 0) >= _G.completionGold then
-        break
-    end
+    if Replica.Data and Replica.Data.Level >= _G.maxLevel then break end
+    if hasDemonic and (Replica.Data.Gold or 0) >= _G.completionGold then break end
 end
 
-print("🏁 Script finished!")
+print("🏁 Finished!")
