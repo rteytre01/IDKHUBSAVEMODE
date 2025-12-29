@@ -177,12 +177,12 @@ while true do
         
         -- Build JSON (ใช้ ✅ ❎ และแปลง Gold เป็น K, M)
         local json_strings = {
-            ArcanePickaxe = hasPickaxe("Arcane Pickaxe", inventory) and "✅" or "❎",
-            DemonicPickaxe = hasPickaxe("Demonic Pickaxe", inventory) and "✅" or "❎",
+            ArcanePickaxe = hasPickaxe("Arcane Pickaxe", inventory) and "✅" or "❌",
+            DemonicPickaxe = hasPickaxe("Demonic Pickaxe", inventory) and "✅" or "❌",
             Gold = formatNumber(Gold), -- ใช้รูปแบบ K, M
             GoldRaw = math.floor(Gold), -- เงินจริงไว้สำรอง
             Level = Level,
-            MagmaPickaxe = hasPickaxe("Magma Pickaxe", inventory) and "✅" or "❎",
+            MagmaPickaxe = hasPickaxe("Magma Pickaxe", inventory) and "✅" or "❌",
             RACE = Race
         }
         
