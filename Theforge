@@ -119,7 +119,7 @@ while true do
             print("🔄 เปลี่ยนไอดี...")
             
             local message = string.format(
-                "%s%s , Level MAX (%d) , 💰%s",
+                "%s%s , 📊Lv.%d , 💰%s , Level MAX",
                 getRaceEmoji(Race),
                 Race,
                 Level,
@@ -161,29 +161,28 @@ while true do
             end
         end
         
-        -- Build message: Race, Pickaxe, Level, Money
+        -- Build message: Race, Level, Money, Pickaxe
         local raceEmoji = getRaceEmoji(Race)
         local pickaxeText = table.concat(pickaxeStatus, " ")
         local goldFormatted = formatNumber(Gold)
         
         local message = string.format(
-            "%s%s , %s , 📊Lv.%d , 💰%s",
+            "%s%s , 📊Lv.%d , 💰%s , %s",
             raceEmoji,
             Race,
-            pickaxeText,
             Level,
-            goldFormatted
+            goldFormatted,
+            pickaxeText
         )
         
-        -- Build JSON (ใช้ ✅ ❎ และแปลง Gold เป็น K, M)
+        -- Build JSON (เรียงตาม: RACE, Level, Gold, Pickaxe)
         local json_strings = {
-            ArcanePickaxe = hasPickaxe("Arcane Pickaxe", inventory) and "✅" or "❌",
-            DemonicPickaxe = hasPickaxe("Demonic Pickaxe", inventory) and "✅" or "❌",
-            Gold = formatNumber(Gold), -- ใช้รูปแบบ K, M
-            GoldRaw = math.floor(Gold), -- เงินจริงไว้สำรอง
+            RACE = Race,
             Level = Level,
+            Gold = formatNumber(Gold),
+            ArcanePickaxe = hasPickaxe("Arcane Pickaxe", inventory) and "✅" or "❌",
             MagmaPickaxe = hasPickaxe("Magma Pickaxe", inventory) and "✅" or "❌",
-            RACE = Race
+            DemonicPickaxe = hasPickaxe("Demonic Pickaxe", inventory) and "✅" or "❌"
         }
         
         local EncodeJson = HttpService:JSONEncode(json_strings)
@@ -252,3 +251,17 @@ while true do
 end
 
 print("🏁 Script finished!")
+```
+
+---
+
+## 📋 **ตัวอย่างผลลัพธ์:**
+
+### Description ที่แสดงใน Horst:
+```
+👿Demon , 📊Lv.45 , 💰243k , ✅AC ✅MM ❌DM
+```
+
+### กรณี Level MAX:
+```
+👿Demon , 📊Lv.120 , 💰10.5M , Level MAX
