@@ -8,6 +8,7 @@ _G.targetPickaxes = _G.targetPickaxes or {
 -- เงื่อนไขการเสร็จ: ต้องมี Demonic Pickaxe + เงิน 500000
 _G.completionPickaxe = _G.completionPickaxe or "Demonic Pickaxe"
 _G.completionGold = _G.completionGold or 500000
+_G.maxLevel = _G.maxLevel or 120 -- Level สูงสุด ถึงแล้วให้เปลี่ยนไอดี
 
 -- ===== Wait Game + Horst =====
 repeat task.wait(.1) until game:IsLoaded()
@@ -79,9 +80,23 @@ local function getPickaxeShort(pickaxeName)
     return shortcuts[pickaxeName] or pickaxeName:sub(1, 3):upper()
 end
 
+-- แปลงตัวเลขเป็น K, M
+local function formatNumber(num)
+    num = math.floor(num) -- ตัดทศนิยมออก
+    
+    if num >= 1000000 then
+        return string.format("%.1fM", num / 1000000):gsub("%.0M", "M")
+    elseif num >= 1000 then
+        return string.format("%.1fk", num / 1000):gsub("%.0k", "k")
+    else
+        return tostring(num)
+    end
+end
+
 -- ===== Main Loop =====
 print("⛏️ Starting Pickaxe & Gold Check...")
 print("🎯 Target: " .. _G.completionPickaxe .. " + " .. _G.completionGold .. " Gold")
+print("📊 Max Level: " .. _G.maxLevel)
 
 while true do
     task.wait(10)
@@ -96,6 +111,37 @@ while true do
         local Race = Replica.Data.Race or "None"
         local Level = Replica.Data.Level or 0
         local inventory = Replica.Data.Inventory.Equipments
+        
+        -- เช็ค Level ถ้าถึง maxLevel ให้เปลี่ยนไอดี
+        if Level >= _G.maxLevel then
+            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            print("📊 Level ถึง " .. _G.maxLevel .. " แล้ว!")
+            print("🔄 เปลี่ยนไอดี...")
+            
+            local message = string.format(
+                "%s%s , Level MAX (%d) , 💰%s",
+                getRaceEmoji(Race),
+                Race,
+                Level,
+                formatNumber(Gold)
+            )
+            
+            pcall(function()
+                _G.Horst_SetDescription(message)
+            end)
+            
+            task.wait(3)
+            
+            local ok, err = pcall(_G.Horst_AccountChangeDone)
+            if ok then
+                print("✅ ส่งสถานะ DONE สำเร็จ! (Level MAX)")
+                print("🎉 เปลี่ยนไอดี...")
+            else
+                warn("❌ ส่งสถานะ DONE ไม่สำเร็จ:", err)
+            end
+            
+            return true
+        end
         
         local pickaxeStatus = {}
         local hasDemonic = false
@@ -118,24 +164,25 @@ while true do
         -- Build message: Race, Pickaxe, Level, Money
         local raceEmoji = getRaceEmoji(Race)
         local pickaxeText = table.concat(pickaxeStatus, " ")
+        local goldFormatted = formatNumber(Gold)
         
         local message = string.format(
-            "%s%s , %s , 📊Lv.%d , 💰%d",
+            "%s%s , %s , 📊Lv.%d , 💰%s",
             raceEmoji,
             Race,
             pickaxeText,
             Level,
-            Gold
+            goldFormatted
         )
         
-        -- Build JSON (เรียงลำดับตามตัวอักษร)
+        -- Build JSON (ใช้ ✅ ❎ และแปลง Gold เป็น K, M)
         local json_strings = {
-            ArcanePickaxe = hasPickaxe("Arcane Pickaxe", inventory) and Arcane Pickaxe or None,
-            DemonicPickaxe = hasPickaxe("Demonic Pickaxe", inventory) and DemonicPickaxe or None,
-            Gold = Gold,
+            ArcanePickaxe = hasPickaxe("Arcane Pickaxe", inventory) and "✅" or "❎",
+            DemonicPickaxe = hasPickaxe("Demonic Pickaxe", inventory) and "✅" or "❎",
+            Gold = formatNumber(Gold), -- ใช้รูปแบบ K, M
+            GoldRaw = math.floor(Gold), -- เงินจริงไว้สำรอง
             Level = Level,
-            MagmaPickaxe = hasPickaxe("Magma Pickaxe", inventory) and MagmaPickaxe or None,
-            Name = plr.Name,
+            MagmaPickaxe = hasPickaxe("Magma Pickaxe", inventory) and "✅" or "❎",
             RACE = Race
         }
         
@@ -144,13 +191,13 @@ while true do
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         print("📊 Status:")
         print("  " .. raceEmoji .. Race)
-        print("  📊 Level:", Level)
-        print("  💰 Gold:", Gold, "/", _G.completionGold)
+        print("  📊 Level:", Level, "/", _G.maxLevel)
+        print("  💰 Gold:", goldFormatted, "(" .. math.floor(Gold) .. ")")
         for _, status in ipairs(pickaxeStatus) do
             print("  " .. status)
         end
         
-        -- Send to Horst (ลอง 2 วิธี)
+        -- Send to Horst
         local sendOk, sendErr = pcall(function()
             _G.Horst_SetDescription(message, EncodeJson)
         end)
@@ -159,18 +206,17 @@ while true do
             print("✅ Description sent!")
         else
             warn("⚠️ Failed with JSON, trying without JSON...")
-            -- ลองส่งแบบไม่มี JSON
             pcall(function()
                 _G.Horst_SetDescription(message)
             end)
         end
         
-        -- Check if done
+        -- Check if done (Demonic + Gold)
         if hasDemonic and Gold >= _G.completionGold then
             print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             print("🎯 เป้าหมายสำเร็จ!")
             print("  ✅ มี " .. _G.completionPickaxe)
-            print("  ✅ เงิน " .. Gold .. " / " .. _G.completionGold)
+            print("  ✅ เงิน " .. math.floor(Gold) .. " / " .. _G.completionGold)
             print("⏳ รอ 5 วินาที ก่อนส่ง DONE...")
             task.wait(5)
             
@@ -182,20 +228,25 @@ while true do
                 warn("❌ ส่งสถานะ DONE ไม่สำเร็จ:", err)
             end
             
-            return true -- break
+            return true
         else
             if not hasDemonic then
                 print("  ⏳ ยังไม่มี " .. _G.completionPickaxe)
             end
             if Gold < _G.completionGold then
-                print("  ⏳ ยังขาดเงิน " .. (_G.completionGold - Gold))
+                print("  ⏳ ยังขาดเงิน " .. formatNumber(_G.completionGold - Gold))
             end
         end
         
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     end)
     
-    if hasDemonic and Gold >= _G.completionGold then
+    -- ตรวจสอบ Level อีกครั้งก่อน loop ต่อ
+    if Replica.Data and Replica.Data.Level >= _G.maxLevel then
+        break
+    end
+    
+    if hasDemonic and (Replica.Data.Gold or 0) >= _G.completionGold then
         break
     end
 end
