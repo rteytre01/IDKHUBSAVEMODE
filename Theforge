@@ -86,102 +86,118 @@ print("🎯 Target: " .. _G.completionPickaxe .. " + " .. _G.completionGold .. "
 while true do
     task.wait(10)
     
-    if not Replica.Data or not Replica.Data.Inventory then
-        warn("⚠️ Data not ready")
-        continue
-    end
-    
-    local Gold = Replica.Data.Gold or 0
-    local Race = Replica.Data.Race or "None"
-    local Level = Replica.Data.Level or 0
-    local inventory = Replica.Data.Inventory.Equipments
-    
-    local pickaxeStatus = {}
-    local hasDemonic = false
-    
-    -- Check each target pickaxe
-    for _, targetName in ipairs(_G.targetPickaxes) do
-        local found = hasPickaxe(targetName, inventory)
-        local shortName = getPickaxeShort(targetName)
-        
-        if found then
-            table.insert(pickaxeStatus, "✅" .. shortName)
-            if targetName == _G.completionPickaxe then
-                hasDemonic = true
-            end
-        else
-            table.insert(pickaxeStatus, "❌" .. shortName)
-        end
-    end
-    
-    -- Build message: Race, Pickaxe, Level, Money
-    local raceEmoji = getRaceEmoji(Race)
-    local pickaxeText = table.concat(pickaxeStatus, " ")
-    
-    local message = string.format(
-        "%s%s , %s , 📊Lv.%d , 💰%d",
-        raceEmoji,
-        Race,
-        pickaxeText,
-        Level,
-        Gold
-    )
-    
-    -- Build JSON พร้อม Race, Pickaxe, Level, Money
-    local json_strings = {
-        Name = plr.Name,
-        RACE = Race,
-        Level = Level,
-        Gold = Gold,
-        ArcanePickaxe = hasPickaxe("Arcane Pickaxe", inventory),
-        MagmaPickaxe = hasPickaxe("Magma Pickaxe", inventory),
-        DemonicPickaxe = hasPickaxe("Demonic Pickaxe", inventory)
-    }
-    
-    local EncodeJson = HttpService:JSONEncode(json_strings)
-    
-    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    print("📊 Status:")
-    print("  " .. raceEmoji .. Race)
-    print("  📊 Level:", Level)
-    print("  💰 Gold:", Gold, "/", _G.completionGold)
-    for _, status in ipairs(pickaxeStatus) do
-        print("  " .. status)
-    end
-    
-    -- Send to Horst
     pcall(function()
-        _G.Horst_SetDescription(message, EncodeJson)
-    end)
-    print("📤 Description sent!")
-    
-    -- Check if done
-    if hasDemonic and Gold >= _G.completionGold then
-        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        print("🎯 เป้าหมายสำเร็จ!")
-        print("  ✅ มี " .. _G.completionPickaxe)
-        print("  ✅ เงิน " .. Gold .. " / " .. _G.completionGold)
-        print("⏳ รอ 5 วินาที ก่อนส่ง DONE...")
-        task.wait(5)
+        if not Replica.Data or not Replica.Data.Inventory then
+            warn("⚠️ Data not ready")
+            return
+        end
         
-        local ok, err = _G.Horst_AccountChangeDone()
-        if ok then
-            print("✅ ส่งสถานะ DONE สำเร็จ!")
-            print("🎉 บัญชีนี้เสร็จสมบูรณ์แล้ว")
+        local Gold = Replica.Data.Gold or 0
+        local Race = Replica.Data.Race or "None"
+        local Level = Replica.Data.Level or 0
+        local inventory = Replica.Data.Inventory.Equipments
+        
+        local pickaxeStatus = {}
+        local hasDemonic = false
+        
+        -- Check each target pickaxe
+        for _, targetName in ipairs(_G.targetPickaxes) do
+            local found = hasPickaxe(targetName, inventory)
+            local shortName = getPickaxeShort(targetName)
+            
+            if found then
+                table.insert(pickaxeStatus, "✅" .. shortName)
+                if targetName == _G.completionPickaxe then
+                    hasDemonic = true
+                end
+            else
+                table.insert(pickaxeStatus, "❌" .. shortName)
+            end
+        end
+        
+        -- Build message: Race, Pickaxe, Level, Money
+        local raceEmoji = getRaceEmoji(Race)
+        local pickaxeText = table.concat(pickaxeStatus, " ")
+        
+        local message = string.format(
+            "%s%s , %s , 📊Lv.%d , 💰%d",
+            raceEmoji,
+            Race,
+            pickaxeText,
+            Level,
+            Gold
+        )
+        
+        -- Build JSON (เรียงลำดับตามตัวอักษร)
+        local json_strings = {
+            ArcanePickaxe = hasPickaxe("Arcane Pickaxe", inventory) and 1 or 0,
+            DemonicPickaxe = hasPickaxe("Demonic Pickaxe", inventory) and 1 or 0,
+            Gold = Gold,
+            Level = Level,
+            MagmaPickaxe = hasPickaxe("Magma Pickaxe", inventory) and 1 or 0,
+            Name = plr.Name,
+            RACE = Race
+        }
+        
+        local EncodeJson = HttpService:JSONEncode(json_strings)
+        
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print("📊 Status:")
+        print("  " .. raceEmoji .. Race)
+        print("  📊 Level:", Level)
+        print("  💰 Gold:", Gold, "/", _G.completionGold)
+        for _, status in ipairs(pickaxeStatus) do
+            print("  " .. status)
+        end
+        
+        -- Send to Horst (ลอง 2 วิธี)
+        local sendOk, sendErr = pcall(function()
+            _G.Horst_SetDescription(message, EncodeJson)
+        end)
+        
+        if sendOk then
+            print("✅ Description sent!")
         else
-            warn("❌ ส่งสถานะ DONE ไม่สำเร็จ:", err)
+            warn("⚠️ Failed with JSON, trying without JSON...")
+            -- ลองส่งแบบไม่มี JSON
+            pcall(function()
+                _G.Horst_SetDescription(message)
+            end)
         end
-        break
-    else
-        if not hasDemonic then
-            print("  ⏳ ยังไม่มี " .. _G.completionPickaxe)
+        
+        -- Check if done
+        if hasDemonic and Gold >= _G.completionGold then
+            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            print("🎯 เป้าหมายสำเร็จ!")
+            print("  ✅ มี " .. _G.completionPickaxe)
+            print("  ✅ เงิน " .. Gold .. " / " .. _G.completionGold)
+            print("⏳ รอ 5 วินาที ก่อนส่ง DONE...")
+            task.wait(5)
+            
+            local ok, err = pcall(_G.Horst_AccountChangeDone)
+            if ok then
+                print("✅ ส่งสถานะ DONE สำเร็จ!")
+                print("🎉 บัญชีนี้เสร็จสมบูรณ์แล้ว")
+            else
+                warn("❌ ส่งสถานะ DONE ไม่สำเร็จ:", err)
+            end
+            
+            return true -- break
+        else
+            if not hasDemonic then
+                print("  ⏳ ยังไม่มี " .. _G.completionPickaxe)
+            end
+            if Gold < _G.completionGold then
+                print("  ⏳ ยังขาดเงิน " .. (_G.completionGold - Gold))
+            end
         end
-        if Gold < _G.completionGold then
-            print("  ⏳ ยังขาดเงิน " .. (_G.completionGold - Gold))
-        end
-    end
+        
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    end)
     
-    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    if hasDemonic and Gold >= _G.completionGold then
+        break
+    end
 end
 
 print("🏁 Script finished!")
