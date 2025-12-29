@@ -10,7 +10,6 @@ _G.targetPickaxes = _G.targetPickaxes or {
 _G.completionPickaxe = _G.completionPickaxe or "Demonic Pickaxe"
 _G.completionGold = _G.completionGold or 500000
 _G.priorityPickaxe = _G.priorityPickaxe or "Prismatic Pickaxe"
-_G.maxLevel = _G.maxLevel or 120
 
 -- ===== Wait Game + Horst =====
 repeat task.wait(5) until game:IsLoaded()
@@ -81,7 +80,6 @@ end
 print("⛏️ Starting...")
 print("🎯 Priority: " .. _G.priorityPickaxe .. " (DONE instantly)")
 print("🎯 Target: " .. _G.completionPickaxe .. " + " .. _G.completionGold .. " Gold")
-print("📊 Max Level: " .. _G.maxLevel)
 
 while true do
     task.wait(10)
@@ -141,28 +139,25 @@ while true do
             _G.Horst_SetDescription(message, jsonData)
         end)
         
-        -- เช็ค Level MAX
-        if Level >= _G.maxLevel then
-            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            print("📊 Level MAX: " .. Level)
-            print("🔄 เปลี่ยนไอดี...")
-            task.wait(3)
-            pcall(_G.Horst_AccountChangeDone)
-            return true
-        end
-        
-        -- เช็ค Prismatic Pickaxe
+        -- เช็ค Prismatic Pickaxe (ลำดับความสำคัญสูงสุด)
         if hasPrismatic then
             print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             print("🌟 พบ Prismatic Pickaxe!")
             print("🎯 เป้าหมายสำเร็จ! (Priority)")
             print("⏳ รอ 5 วินาที ก่อนส่ง DONE...")
             task.wait(5)
+            
+            -- ส่ง JSON อีกครั้งก่อน DONE
+            pcall(function()
+                _G.Horst_SetDescription(message, jsonData)
+            end)
+            task.wait(1)
+            
             pcall(_G.Horst_AccountChangeDone)
             return true
         end
         
-        -- เช็คเงื่อนไขเสร็จ
+        -- เช็คเงื่อนไขเสร็จ (Demonic + Gold)
         if hasDemonic and Gold >= _G.completionGold then
             print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             print("🎯 เป้าหมายสำเร็จ!")
@@ -170,24 +165,20 @@ while true do
             print("  ✅ เงิน " .. formatNumber(Gold))
             print("⏳ รอ 5 วินาที ก่อนส่ง DONE...")
             task.wait(5)
+            
+            -- ส่ง JSON อีกครั้งก่อน DONE
+            pcall(function()
+                _G.Horst_SetDescription(message, jsonData)
+            end)
+            task.wait(1)
+            
             pcall(_G.Horst_AccountChangeDone)
             return true
         end
     end)
     
-    if Replica.Data and Replica.Data.Level >= _G.maxLevel then break end
     if hasPrismatic then break end
     if hasDemonic and (Replica.Data.Gold or 0) >= _G.completionGold then break end
 end
 
 print("🏁 Finished!")
-```
-
----
-
-## 📱 **ตอนนี้จะแสดงแบบนี้:**
-
-### กรณี Level 122 (Level MAX):
-**Description:**
-```
-👼🏻Angel , 📊Lv.122 , 💰291.7k , ✅AC ✅MM ❌DM ❌PRI
