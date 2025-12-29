@@ -180,6 +180,7 @@ while true do
             RACE = Race,
             Level = Level,
             Gold = formatNumber(Gold),
+            GoldRaw = math.floor(Gold),
             ArcanePickaxe = hasPickaxe("Arcane Pickaxe", inventory) and "✅" or "❌",
             MagmaPickaxe = hasPickaxe("Magma Pickaxe", inventory) and "✅" or "❌",
             DemonicPickaxe = hasPickaxe("Demonic Pickaxe", inventory) and "✅" or "❌"
@@ -251,17 +252,3 @@ while true do
 end
 
 print("🏁 Script finished!")
-```
-
----
-
-## 📋 **ตัวอย่างผลลัพธ์:**
-
-### Description ที่แสดงใน Horst:
-```
-👿Demon , 📊Lv.45 , 💰243k , ✅AC ✅MM ❌DM
-```
-
-### กรณี Level MAX:
-```
-👿Demon , 📊Lv.120 , 💰10.5M , Level MAX
