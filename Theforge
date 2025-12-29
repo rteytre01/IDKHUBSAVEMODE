@@ -121,7 +121,7 @@ while true do
         
         -- สร้าง JSON สำหรับ Google Sheets
         local jsonData = string.format(
-            '{"RACE":"%s","Level":%d,"Gold":"%s","GoldRaw":%d,"ArcanePickaxe":"%s","MagmaPickaxe":"%s","DemonicPickaxe":"%s"}',
+            '{"RACE":"%s","Level":%s,"Gold":"%s","ArcanePickaxe":"%s","MagmaPickaxe":"%s","DemonicPickaxe":"%s"}',
             Race,
             Level,
             formatNumber(Gold),
