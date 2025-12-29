@@ -9,7 +9,7 @@ _G.targetPickaxes = _G.targetPickaxes or {
 -- เงื่อนไขการเสร็จ: ต้องมี Prismatic Pickaxe หรือ (Demonic Pickaxe + เงิน 500000)
 _G.completionPickaxe = _G.completionPickaxe or "Demonic Pickaxe"
 _G.completionGold = _G.completionGold or 500000
-_G.priorityPickaxe = _G.priorityPickaxe or "Prismatic Pickaxe" -- ถ้ามีอันนี้ให้ DONE ทันที
+_G.priorityPickaxe = _G.priorityPickaxe or "Prismatic Pickaxe"
 _G.maxLevel = _G.maxLevel or 120
 
 -- ===== Wait Game + Horst =====
@@ -94,16 +94,6 @@ while true do
         local Level = Replica.Data.Level or 0
         local inventory = Replica.Data.Inventory.Equipments
         
-        -- เช็ค Level MAX
-        if Level >= _G.maxLevel then
-            print("📊 Level MAX: " .. Level)
-            local msg = getRaceEmoji(Race) .. Race .. " , 📊Lv." .. Level .. " , 💰" .. formatNumber(Gold) .. " , Level MAX"
-            pcall(function() _G.Horst_SetDescription(msg) end)
-            task.wait(3)
-            pcall(_G.Horst_AccountChangeDone)
-            return true
-        end
-        
         hasDemonic = false
         hasPrismatic = false
         local pickaxeStatus = {}
@@ -122,6 +112,7 @@ while true do
             end
         end
         
+        -- Build message: Race, Level, Money, Pickaxe
         local message = string.format(
             "%s%s , 📊Lv.%d , 💰%s , %s",
             getRaceEmoji(Race),
@@ -131,7 +122,7 @@ while true do
             table.concat(pickaxeStatus, " ")
         )
         
-        -- สร้าง JSON เรียงตาม: RACE, Level, Gold, Pickaxes
+        -- Build JSON
         local jsonData = string.format(
             '{"RACE":"%s","Level":%d,"Gold":"%s","ArcanePickaxe":"%s","MagmaPickaxe":"%s","DemonicPickaxe":"%s","PrismaticPickaxe":"%s"}',
             Race,
@@ -150,7 +141,17 @@ while true do
             _G.Horst_SetDescription(message, jsonData)
         end)
         
-        -- เช็ค Prismatic Pickaxe (ลำดับความสำคัญสูงสุด)
+        -- เช็ค Level MAX
+        if Level >= _G.maxLevel then
+            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            print("📊 Level MAX: " .. Level)
+            print("🔄 เปลี่ยนไอดี...")
+            task.wait(3)
+            pcall(_G.Horst_AccountChangeDone)
+            return true
+        end
+        
+        -- เช็ค Prismatic Pickaxe
         if hasPrismatic then
             print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             print("🌟 พบ Prismatic Pickaxe!")
@@ -161,7 +162,7 @@ while true do
             return true
         end
         
-        -- เช็คเงื่อนไขเสร็จ (Demonic + Gold)
+        -- เช็คเงื่อนไขเสร็จ
         if hasDemonic and Gold >= _G.completionGold then
             print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             print("🎯 เป้าหมายสำเร็จ!")
@@ -180,3 +181,13 @@ while true do
 end
 
 print("🏁 Finished!")
+```
+
+---
+
+## 📱 **ตอนนี้จะแสดงแบบนี้:**
+
+### กรณี Level 122 (Level MAX):
+**Description:**
+```
+👼🏻Angel , 📊Lv.122 , 💰291.7k , ✅AC ✅MM ❌DM ❌PRI
