@@ -127,16 +127,18 @@ while true do
         Gold
     )
     
-    -- Build JSON
-    local jsonData = {
+    -- Build JSON พร้อม Race, Pickaxe, Level, Money
+    local json_strings = {
         Name = plr.Name,
-        Race = Race,
+        RACE = Race,
         Level = Level,
         Gold = Gold,
         ArcanePickaxe = hasPickaxe("Arcane Pickaxe", inventory),
         MagmaPickaxe = hasPickaxe("Magma Pickaxe", inventory),
         DemonicPickaxe = hasPickaxe("Demonic Pickaxe", inventory)
     }
+    
+    local EncodeJson = HttpService:JSONEncode(json_strings)
     
     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     print("📊 Status:")
@@ -149,7 +151,7 @@ while true do
     
     -- Send to Horst
     pcall(function()
-        _G.Horst_SetDescription(message, HttpService:JSONEncode(jsonData))
+        _G.Horst_SetDescription(message, EncodeJson)
     end)
     print("📤 Description sent!")
     
@@ -183,27 +185,3 @@ while true do
 end
 
 print("🏁 Script finished!")
-```
-
----
-
-## 📋 **ตัวอย่างผลลัพธ์:**
-
-### กรณี Race: Demon
-```
-👿Demon , ✅AC ✅MM ❌DM , 📊Lv.45 , 💰250000
-```
-
-### กรณี Race: Angel
-```
-👼🏻Angel , ✅AC ❌MM ❌DM , 📊Lv.30 , 💰150000
-```
-
-### กรณี Race: Archangel
-```
-👼🏻👿Archangel , ✅AC ✅MM ✅DM , 📊Lv.80 , 💰650000
-```
-
-### กรณี Race: Human
-```
-👤Human , ❌AC ❌MM ❌DM , 📊Lv.10 , 💰5000
