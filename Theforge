@@ -119,9 +119,9 @@ while true do
             table.concat(pickaxeStatus, " ")
         )
         
-        -- สร้าง JSON สำหรับ Google Sheets
+        -- สร้าง JSON เรียงตาม: RACE, Level, Gold, ArcanePickaxe, MagmaPickaxe, DemonicPickaxe
         local jsonData = string.format(
-            '{"RACE":"%s","Level":%s,"Gold":"%s","ArcanePickaxe":"%s","MagmaPickaxe":"%s","DemonicPickaxe":"%s"}',
+            '{"RACE":"%s","Level":%d,"Gold":"%s","ArcanePickaxe":"%s","MagmaPickaxe":"%s","DemonicPickaxe":"%s"}',
             Race,
             Level,
             formatNumber(Gold),
