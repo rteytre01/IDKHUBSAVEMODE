@@ -1,15 +1,22 @@
 -- ===== Config =====
-_G.targetPickaxes = _G.targetPickaxes or {
+_G.Config = _G.Config or {}
+
+-- Pickaxes ที่ต้องการติดตาม
+_G.Config.targetPickaxes = _G.Config.targetPickaxes or {
     "Arcane Pickaxe",
     "Magma Pickaxe",
     "Demonic Pickaxe",
     "Prismatic Pickaxe"
 }
 
--- เงื่อนไขการเสร็จ: ต้องมี Prismatic Pickaxe หรือ (Demonic Pickaxe + เงิน 500000)
-_G.completionPickaxe = _G.completionPickaxe or "Demonic Pickaxe"
-_G.completionGold = _G.completionGold or 500000
-_G.priorityPickaxe = _G.priorityPickaxe or "Prismatic Pickaxe"
+-- เงื่อนไขการเสร็จ
+_G.Config.completionPickaxe = _G.Config.completionPickaxe or "Demonic Pickaxe"  -- Pickaxe ที่ต้องการ + เงิน
+_G.Config.completionGold = _G.Config.completionGold or 500000                    -- เงินเป้าหมาย
+_G.Config.priorityPickaxe = _G.Config.priorityPickaxe or "Prismatic Pickaxe"    -- Pickaxe ที่ได้แล้ว DONE ทันที
+
+-- ตั้งค่าเวลา
+_G.Config.checkDelay = _G.Config.checkDelay or 10  -- ตรวจสอบทุกกี่วินาที
+_G.Config.doneDelay = _G.Config.doneDelay or 5     -- รอกี่วินาทีก่อนส่ง DONE
 
 -- ===== Wait Game + Horst =====
 repeat task.wait(5) until game:IsLoaded()
@@ -60,7 +67,9 @@ local function getPickaxeShort(pickaxeName)
         ["Arcane Pickaxe"] = "AC",
         ["Magma Pickaxe"] = "MM",
         ["Demonic Pickaxe"] = "DM",
-        ["Prismatic Pickaxe"] = "PRI"
+        ["Prismatic Pickaxe"] = "PRI",
+        ["Diamond Pickaxe"] = "DIA",
+        ["Legendary Pickaxe"] = "LEG"
     }
     return shortcuts[pickaxeName] or pickaxeName:sub(1, 3):upper()
 end
@@ -77,12 +86,19 @@ local function formatNumber(num)
 end
 
 -- ===== Main Loop =====
-print("⛏️ Starting...")
-print("🎯 Priority: " .. _G.priorityPickaxe .. " (DONE instantly)")
-print("🎯 Target: " .. _G.completionPickaxe .. " + " .. _G.completionGold .. " Gold")
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+print("⛏️ Pickaxe Tracker Starting...")
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+print("🎯 Config:")
+print("  • Priority Pickaxe: " .. _G.Config.priorityPickaxe)
+print("  • Target Pickaxe: " .. _G.Config.completionPickaxe)
+print("  • Target Gold: " .. formatNumber(_G.Config.completionGold))
+print("  • Check Delay: " .. _G.Config.checkDelay .. "s")
+print("  • Tracking: " .. table.concat(_G.Config.targetPickaxes, ", "))
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
 while true do
-    task.wait(10)
+    task.wait(_G.Config.checkDelay)
     
     pcall(function()
         if not Replica.Data or not Replica.Data.Inventory then return end
@@ -96,21 +112,21 @@ while true do
         hasPrismatic = false
         local pickaxeStatus = {}
         
-        for _, targetName in ipairs(_G.targetPickaxes) do
+        for _, targetName in ipairs(_G.Config.targetPickaxes) do
             local found = hasPickaxe(targetName, inventory)
             local shortName = getPickaxeShort(targetName)
             table.insert(pickaxeStatus, (found and "✅" or "❌") .. shortName)
             
-            if found and targetName == _G.completionPickaxe then
+            if found and targetName == _G.Config.completionPickaxe then
                 hasDemonic = true
             end
             
-            if found and targetName == _G.priorityPickaxe then
+            if found and targetName == _G.Config.priorityPickaxe then
                 hasPrismatic = true
             end
         end
         
-        -- Build message: Race, Level, Money, Pickaxe
+        -- Build message
         local message = string.format(
             "%s%s , 📊Lv.%d , 💰%s , %s",
             getRaceEmoji(Race),
@@ -134,20 +150,18 @@ while true do
         
         print("📤", message)
         
-        -- ส่งไปยัง Horst
         pcall(function()
             _G.Horst_SetDescription(message, jsonData)
         end)
         
-        -- เช็ค Prismatic Pickaxe (ลำดับความสำคัญสูงสุด)
+        -- เช็ค Priority Pickaxe
         if hasPrismatic then
             print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            print("🌟 พบ Prismatic Pickaxe!")
+            print("🌟 พบ " .. _G.Config.priorityPickaxe .. "!")
             print("🎯 เป้าหมายสำเร็จ! (Priority)")
-            print("⏳ รอ 5 วินาที ก่อนส่ง DONE...")
-            task.wait(5)
+            print("⏳ รอ " .. _G.Config.doneDelay .. " วินาที ก่อนส่ง DONE...")
+            task.wait(_G.Config.doneDelay)
             
-            -- ส่ง JSON อีกครั้งก่อน DONE
             pcall(function()
                 _G.Horst_SetDescription(message, jsonData)
             end)
@@ -157,16 +171,15 @@ while true do
             return true
         end
         
-        -- เช็คเงื่อนไขเสร็จ (Demonic + Gold)
-        if hasDemonic and Gold >= _G.completionGold then
+        -- เช็คเงื่อนไข Completion
+        if hasDemonic and Gold >= _G.Config.completionGold then
             print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             print("🎯 เป้าหมายสำเร็จ!")
-            print("  ✅ มี " .. _G.completionPickaxe)
-            print("  ✅ เงิน " .. formatNumber(Gold))
-            print("⏳ รอ 5 วินาที ก่อนส่ง DONE...")
-            task.wait(5)
+            print("  ✅ มี " .. _G.Config.completionPickaxe)
+            print("  ✅ เงิน " .. formatNumber(Gold) .. " / " .. formatNumber(_G.Config.completionGold))
+            print("⏳ รอ " .. _G.Config.doneDelay .. " วินาที ก่อนส่ง DONE...")
+            task.wait(_G.Config.doneDelay)
             
-            -- ส่ง JSON อีกครั้งก่อน DONE
             pcall(function()
                 _G.Horst_SetDescription(message, jsonData)
             end)
@@ -178,7 +191,7 @@ while true do
     end)
     
     if hasPrismatic then break end
-    if hasDemonic and (Replica.Data.Gold or 0) >= _G.completionGold then break end
+    if hasDemonic and (Replica.Data.Gold or 0) >= _G.Config.completionGold then break end
 end
 
-print("🏁 Finished!")
+print("🏁 Script Finished!")
