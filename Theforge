@@ -11,7 +11,7 @@ _G.completionGold = _G.completionGold or 500000
 _G.maxLevel = _G.maxLevel or 120 -- Level สูงสุด ถึงแล้วให้เปลี่ยนไอดี
 
 -- ===== Wait Game + Horst =====
-repeat task.wait(.1) until game:IsLoaded()
+repeat task.wait(6) until game:IsLoaded()
 repeat task.wait(.1) until _G.Horst_SetDescription and _G.Horst_AccountChangeDone
 
 -- ===== Services =====
