@@ -130,11 +130,11 @@ while true do
         
         -- Build JSON (เรียงลำดับตามตัวอักษร)
         local json_strings = {
-            ArcanePickaxe = hasPickaxe("Arcane Pickaxe", inventory) and 1 or 0,
-            DemonicPickaxe = hasPickaxe("Demonic Pickaxe", inventory) and 1 or 0,
+            ArcanePickaxe = hasPickaxe("Arcane Pickaxe", inventory) and Arcane Pickaxe or None,
+            DemonicPickaxe = hasPickaxe("Demonic Pickaxe", inventory) and DemonicPickaxe or None,
             Gold = Gold,
             Level = Level,
-            MagmaPickaxe = hasPickaxe("Magma Pickaxe", inventory) and 1 or 0,
+            MagmaPickaxe = hasPickaxe("Magma Pickaxe", inventory) and MagmaPickaxe or None,
             Name = plr.Name,
             RACE = Race
         }
