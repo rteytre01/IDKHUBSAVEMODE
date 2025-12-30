@@ -11,7 +11,7 @@ _G.Config.targetPickaxes = _G.Config.targetPickaxes or {
 
 -- เงื่อนไขการเสร็จ
 _G.Config.completionPickaxe = _G.Config.completionPickaxe or "Demonic Pickaxe"  -- Pickaxe ที่ต้องการ + เงิน
-_G.Config.completionGold = _G.Config.completionGold or 500000                    -- เงินเป้าหมาย
+_G.Config.completionGold = _G.Config.completionGold or 50000                    -- เงินเป้าหมาย
 _G.Config.priorityPickaxe = _G.Config.priorityPickaxe or "Prismatic Pickaxe"    -- Pickaxe ที่ได้แล้ว DONE ทันที
 
 -- ตั้งค่าเวลา
