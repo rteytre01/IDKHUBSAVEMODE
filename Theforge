@@ -11,7 +11,8 @@ _G.Config.targetPickaxes = _G.Config.targetPickaxes or {
 
 -- เงื่อนไขการเสร็จ
 _G.Config.completionPickaxe = _G.Config.completionPickaxe or "Demonic Pickaxe"  -- Pickaxe ที่ต้องการ + เงิน
-_G.Config.completionGold = _G.Config.completionGold or 50000                    -- เงินเป้าหมาย
+_G.Config.completionGold = _G.Config.completionGold or 500000                    -- เงินเป้าหมาย
+_G.Config.maxLevel = _G.Config.maxLevel or 120                                  -- เลเวลที่ต้องมากกว่า
 _G.Config.priorityPickaxe = _G.Config.priorityPickaxe or "Prismatic Pickaxe"    -- Pickaxe ที่ได้แล้ว DONE ทันที
 
 -- ตั้งค่าเวลา
@@ -93,6 +94,7 @@ print("🎯 Config:")
 print("  • Priority Pickaxe: " .. _G.Config.priorityPickaxe)
 print("  • Target Pickaxe: " .. _G.Config.completionPickaxe)
 print("  • Target Gold: " .. formatNumber(_G.Config.completionGold))
+print("  • Max Level: " .. _G.Config.maxLevel)
 print("  • Check Delay: " .. _G.Config.checkDelay .. "s")
 print("  • Tracking: " .. table.concat(_G.Config.targetPickaxes, ", "))
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -154,7 +156,7 @@ while true do
             _G.Horst_SetDescription(message, jsonData)
         end)
         
-        -- เช็ค Priority Pickaxe
+        -- เช็ค Priority Pickaxe (ยังเหมือนเดิม)
         if hasPrismatic then
             print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             print("🌟 พบ " .. _G.Config.priorityPickaxe .. "!")
@@ -171,12 +173,13 @@ while true do
             return true
         end
         
-        -- เช็คเงื่อนไข Completion
-        if hasDemonic and Gold >= _G.Config.completionGold then
+        -- เช็คเงื่อนไข Completion: ต้องมี Demonic + เงินครบ + Level > maxLevel
+        if hasDemonic and Gold >= _G.Config.completionGold and Level > _G.Config.maxLevel then
             print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             print("🎯 เป้าหมายสำเร็จ!")
             print("  ✅ มี " .. _G.Config.completionPickaxe)
             print("  ✅ เงิน " .. formatNumber(Gold) .. " / " .. formatNumber(_G.Config.completionGold))
+            print("  ✅ เลเวล " .. Level .. " > " .. _G.Config.maxLevel)
             print("⏳ รอ " .. _G.Config.doneDelay .. " วินาที ก่อนส่ง DONE...")
             task.wait(_G.Config.doneDelay)
             
@@ -191,7 +194,7 @@ while true do
     end)
     
     if hasPrismatic then break end
-    if hasDemonic and (Replica.Data.Gold or 0) >= _G.Config.completionGold then break end
+    if hasDemonic and (Replica.Data.Gold or 0) >= _G.Config.completionGold and (Replica.Data.Level or 0) > _G.Config.maxLevel then break end
 end
 
 print("🏁 Script Finished!")
