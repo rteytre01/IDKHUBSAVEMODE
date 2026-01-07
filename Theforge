@@ -6,18 +6,19 @@ _G.Config.targetPickaxes = _G.Config.targetPickaxes or {
     "Arcane Pickaxe",
     "Magma Pickaxe",
     "Demonic Pickaxe",
+    "Frost Pickaxe",
     "Prismatic Pickaxe"
 }
 
 -- เงื่อนไขการเสร็จ
 _G.Config.completionPickaxe = _G.Config.completionPickaxe or "Demonic Pickaxe"  -- Pickaxe ที่ต้องการ + เงิน
-_G.Config.completionGold = _G.Config.completionGold or 500000                    -- เงินเป้าหมาย
-_G.Config.maxLevel = _G.Config.maxLevel or 120                                  -- เลเวลที่ต้องมากกว่า
+_G.Config.completionGold = _G.Config.completionGold or 50000                    -- เงินเป้าหมาย
+_G.Config.maxLevel = _G.Config.maxLevel or 100                                  -- เลเวลที่ต้องมากกว่า
 _G.Config.priorityPickaxe = _G.Config.priorityPickaxe or "Prismatic Pickaxe"    -- Pickaxe ที่ได้แล้ว DONE ทันที
 
 -- ตั้งค่าเวลา
-_G.Config.checkDelay = _G.Config.checkDelay or 10  -- ตรวจสอบทุกกี่วินาที
-_G.Config.doneDelay = _G.Config.doneDelay or 5     -- รอกี่วินาทีก่อนส่ง DONE
+_G.Config.checkDelay = _G.Config.checkDelay or 60  -- ตรวจสอบทุกกี่วินาที
+_G.Config.doneDelay = _G.Config.doneDelay or 30     -- รอกี่วินาทีก่อนส่ง DONE
 
 -- ===== Wait Game + Horst =====
 repeat task.wait(5) until game:IsLoaded()
@@ -69,6 +70,7 @@ local function getPickaxeShort(pickaxeName)
         ["Magma Pickaxe"] = "MM",
         ["Demonic Pickaxe"] = "DM",
         ["Prismatic Pickaxe"] = "PRI",
+        ["Frost Pickaxe"] = "FRO",
         ["Diamond Pickaxe"] = "DIA",
         ["Legendary Pickaxe"] = "LEG"
     }
@@ -140,13 +142,14 @@ while true do
         
         -- Build JSON
         local jsonData = string.format(
-            '{"RACE":"%s","Level":%d,"Gold":"%s","ArcanePickaxe":"%s","MagmaPickaxe":"%s","DemonicPickaxe":"%s","PrismaticPickaxe":"%s"}',
+            '{"RACE":"%s","Level":%d,"Gold":"%s","ArcanePickaxe":"%s","MagmaPickaxe":"%s","DemonicPickaxe":"%s","FrostPickaxe":"%s","PrismaticPickaxe":"%s"}',
             Race,
             Level,
             formatNumber(Gold),
             hasPickaxe("Arcane Pickaxe", inventory) and "✅" or "❌",
             hasPickaxe("Magma Pickaxe", inventory) and "✅" or "❌",
             hasPickaxe("Demonic Pickaxe", inventory) and "✅" or "❌",
+            hasPickaxe("Frost Pickaxe", inventory) and "✅" or "❌",
             hasPickaxe("Prismatic Pickaxe", inventory) and "✅" or "❌"
         )
         
