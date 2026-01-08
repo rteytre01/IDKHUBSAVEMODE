@@ -17,8 +17,8 @@ _G.Config.maxLevel = _G.Config.maxLevel or 100                                  
 _G.Config.priorityPickaxe = _G.Config.priorityPickaxe or "Prismatic Pickaxe"    -- Pickaxe ที่ได้แล้ว DONE ทันที
 
 -- ตั้งค่าเวลา
-_G.Config.checkDelay = _G.Config.checkDelay or 60  -- ตรวจสอบทุกกี่วินาที
-_G.Config.doneDelay = _G.Config.doneDelay or 30     -- รอกี่วินาทีก่อนส่ง DONE
+_G.Config.checkDelay = _G.Config.checkDelay or 10  -- ตรวจสอบทุกกี่วินาที
+_G.Config.doneDelay = _G.Config.doneDelay or 10     -- รอกี่วินาทีก่อนส่ง DONE
 
 -- ===== Wait Game + Horst =====
 repeat task.wait(5) until game:IsLoaded()
